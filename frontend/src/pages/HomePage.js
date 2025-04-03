@@ -52,11 +52,11 @@ const HomePage = () => {
       
       if (result && result.images && result.images.length > 0) {
         console.log('Images received:', result.images.length);
-        // Add the full backend URL to the image URLs
+        // Use relative URLs for image paths to avoid hardcoding the backend port
         const processedImages = result.images.map(img => ({
           ...img,
-          displayUrl: `http://localhost:3001${img.url}`,
-          url: `http://localhost:3001${img.url}`,
+          displayUrl: img.url, // Use relative URL
+          url: img.url, // Use relative URL
           prompt: prompt
         }));
         console.log('Processed images with full URLs:', processedImages);
@@ -74,17 +74,41 @@ const HomePage = () => {
     }
   };
 
-  const handleDownload = (image) => {
+  const handleDownload = async (image) => {
     if (!image || !image.url) {
       setError('Image URL not available for download');
       return;
     }
-    const link = document.createElement('a');
-    link.href = image.url;
-    link.download = `${image.id || 'grok-image'}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    try {
+      // Make sure we have the full URL for downloading
+      const fullUrl = image.url.startsWith('http') ? image.url : `${window.location.origin}${image.url}`;
+      console.log('Downloading image from URL:', fullUrl);
+      
+      // Fetch the image as a blob
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${image.id || 'grok-image'}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      console.log('Download completed successfully');
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      setError(`Failed to download image: ${error.message}`);
+    }
   };
 
   const handleCloseError = () => {
@@ -184,9 +208,22 @@ const HomePage = () => {
           <Typography variant="h4" component="h2" gutterBottom>
             Generated Images
           </Typography>
-          <Grid container spacing={3} className="image-grid">
-            {images.map((image, index) => (
-              <Grid item xs={12} sm={6} md={4} key={image.id || index}>
+          <Grid container spacing={2} className="image-grid">
+            {images.map((image, index) => {
+              // Dynamically set grid size based on number of images
+              let gridSize;
+              if (images.length === 1) {
+                gridSize = { xs: 12, sm: 12, md: 12 }; // Full width for single image
+              } else if (images.length === 2) {
+                gridSize = { xs: 12, sm: 6, md: 6 }; // Two images per row
+              } else if (images.length === 3) {
+                gridSize = { xs: 12, sm: 6, md: 4 }; // Three images per row
+              } else {
+                gridSize = { xs: 12, sm: 6, md: 3 }; // Four images per row (default)
+              }
+              
+              return (
+                <Grid item xs={gridSize.xs} sm={gridSize.sm} md={gridSize.md} key={image.id || index}>
                 <Card className="image-card fade-in">
                   <Box sx={{ position: 'relative', width: '100%', paddingTop: '100%' }}>
                     <CardMedia
@@ -213,12 +250,6 @@ const HomePage = () => {
                     <Typography variant="body2" color="text.secondary">
                       {image.prompt || prompt}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                      Image ID: {image.id || `img_${index}`}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      URL: {image.url ? image.url.substring(0, 30) + '...' : 'N/A'}
-                    </Typography>
                   </CardContent>
                   <CardActions>
                     <Button
@@ -232,7 +263,8 @@ const HomePage = () => {
                   </CardActions>
                 </Card>
               </Grid>
-            ))}
+            );
+            })}
           </Grid>
         </Box>
       )}
