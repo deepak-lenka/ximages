@@ -5,10 +5,7 @@ import {
   TextField, 
   Button, 
   Grid, 
-  Card, 
   CardMedia, 
-  CardContent, 
-  CardActions,
   Box,
   Paper,
   CircularProgress,
@@ -349,44 +346,12 @@ const HomePage = () => {
           >
             Generated Images
           </Typography>
-<<<<<<< HEAD
           <Grid container spacing={4} className="image-grid">
-            {images.map((image, index) => (
-              <Grid item xs={12} sm={6} md={4} key={image.id || index}>
-                <Box
-                  sx={{
-                    position: 'relative',
-                    overflow: 'hidden',
-                    borderRadius: '16px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-                    transition: 'all 0.3s ease',
-                    transform: 'translateY(0)',
-                    '&:hover': {
-                      transform: 'translateY(-8px)',
-                      boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
-                    },
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    bgcolor: (theme) => theme.palette.mode === 'dark' ? '#1e1e1e' : '#f8f9fa',
-                  }}
-                  className="image-card fade-in"
-                >
-                  <Box 
-                    sx={{ 
-                      position: 'relative', 
-                      width: '100%', 
-                      paddingTop: '100%',
-                      overflow: 'hidden',
-                    }}
-                  >
-=======
-          <Grid container spacing={2} className="image-grid">
             {images.map((image, index) => {
               // Dynamically set grid size based on number of images
               let gridSize;
               if (images.length === 1) {
-                gridSize = { xs: 12, sm: 12, md: 12 }; // Full width for single image
+                gridSize = { xs: 12, sm: 12, md: 8 }; // Almost full width for single image
               } else if (images.length === 2) {
                 gridSize = { xs: 12, sm: 6, md: 6 }; // Two images per row
               } else if (images.length === 3) {
@@ -397,9 +362,33 @@ const HomePage = () => {
               
               return (
                 <Grid item xs={gridSize.xs} sm={gridSize.sm} md={gridSize.md} key={image.id || index}>
-                <Card className="image-card fade-in">
-                  <Box sx={{ position: 'relative', width: '100%', paddingTop: '100%' }}>
->>>>>>> de24ec7c188e3b402c9832ef79cd5d9849c4c328
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      overflow: 'hidden',
+                      borderRadius: '16px',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                      transition: 'all 0.3s ease',
+                      transform: 'translateY(0)',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
+                      },
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? '#1e1e1e' : '#f8f9fa',
+                    }}
+                    className="image-card fade-in"
+                  >
+                    <Box 
+                      sx={{ 
+                        position: 'relative', 
+                        width: '100%', 
+                        paddingTop: '100%',
+                        overflow: 'hidden',
+                      }}
+                    >
                     <CardMedia
                       component="img"
                       image={image.displayUrl}
@@ -423,7 +412,6 @@ const HomePage = () => {
                       }}
                     />
                   </Box>
-<<<<<<< HEAD
                   <Box 
                     sx={{ 
                       display: 'flex', 
@@ -432,14 +420,6 @@ const HomePage = () => {
                       mt: 'auto'
                     }}
                   >
-=======
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary">
-                      {image.prompt || prompt}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
->>>>>>> de24ec7c188e3b402c9832ef79cd5d9849c4c328
                     <Button
                       variant="contained"
                       color="primary"
@@ -462,9 +442,9 @@ const HomePage = () => {
                       Download
                     </Button>
                   </Box>
-                </Box>
-              </Grid>
-            );
+                  </Box>
+                </Grid>
+              );
             })}
           </Grid>
         </Box>
