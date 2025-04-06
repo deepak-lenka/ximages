@@ -52,11 +52,11 @@ const HomePage = () => {
       
       if (result && result.images && result.images.length > 0) {
         console.log('Images received:', result.images.length);
-        // Add the full backend URL to the image URLs
+        // Use relative URLs for image paths to avoid hardcoding the backend port
         const processedImages = result.images.map(img => ({
           ...img,
-          displayUrl: `http://localhost:3001${img.url}`,
-          url: `http://localhost:3001${img.url}`,
+          displayUrl: img.url, // Use relative URL
+          url: img.url, // Use relative URL
           prompt: prompt
         }));
         console.log('Processed images with full URLs:', processedImages);
@@ -75,7 +75,7 @@ const HomePage = () => {
   };
 
   const handleDownload = async (image) => {
-    if (!image || !image.displayUrl) {
+    if (!image || !(image.displayUrl || image.url)) {
       setError('Image URL not available for download');
       return;
     }
@@ -84,8 +84,13 @@ const HomePage = () => {
       // Show loading state
       setLoading(true);
       
+      // Make sure we have the full URL for downloading
+      const imageUrl = image.displayUrl || image.url;
+      const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
+      console.log('Downloading image from URL:', fullUrl);
+      
       // Fetch the image as a blob
-      const response = await fetch(image.displayUrl);
+      const response = await fetch(fullUrl);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
@@ -121,7 +126,7 @@ const HomePage = () => {
         URL.revokeObjectURL(blobUrl); // Free up memory
       }, 100);
       
-      console.log('Download completed for:', image.displayUrl);
+      console.log('Download completed successfully');
     } catch (err) {
       console.error('Error downloading image:', err);
       setError('Failed to download image: ' + err.message);
@@ -344,6 +349,7 @@ const HomePage = () => {
           >
             Generated Images
           </Typography>
+<<<<<<< HEAD
           <Grid container spacing={4} className="image-grid">
             {images.map((image, index) => (
               <Grid item xs={12} sm={6} md={4} key={image.id || index}>
@@ -374,6 +380,26 @@ const HomePage = () => {
                       overflow: 'hidden',
                     }}
                   >
+=======
+          <Grid container spacing={2} className="image-grid">
+            {images.map((image, index) => {
+              // Dynamically set grid size based on number of images
+              let gridSize;
+              if (images.length === 1) {
+                gridSize = { xs: 12, sm: 12, md: 12 }; // Full width for single image
+              } else if (images.length === 2) {
+                gridSize = { xs: 12, sm: 6, md: 6 }; // Two images per row
+              } else if (images.length === 3) {
+                gridSize = { xs: 12, sm: 6, md: 4 }; // Three images per row
+              } else {
+                gridSize = { xs: 12, sm: 6, md: 3 }; // Four images per row (default)
+              }
+              
+              return (
+                <Grid item xs={gridSize.xs} sm={gridSize.sm} md={gridSize.md} key={image.id || index}>
+                <Card className="image-card fade-in">
+                  <Box sx={{ position: 'relative', width: '100%', paddingTop: '100%' }}>
+>>>>>>> de24ec7c188e3b402c9832ef79cd5d9849c4c328
                     <CardMedia
                       component="img"
                       image={image.displayUrl}
@@ -397,6 +423,7 @@ const HomePage = () => {
                       }}
                     />
                   </Box>
+<<<<<<< HEAD
                   <Box 
                     sx={{ 
                       display: 'flex', 
@@ -405,6 +432,14 @@ const HomePage = () => {
                       mt: 'auto'
                     }}
                   >
+=======
+                  <CardContent>
+                    <Typography variant="body2" color="text.secondary">
+                      {image.prompt || prompt}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+>>>>>>> de24ec7c188e3b402c9832ef79cd5d9849c4c328
                     <Button
                       variant="contained"
                       color="primary"
@@ -429,7 +464,8 @@ const HomePage = () => {
                   </Box>
                 </Box>
               </Grid>
-            ))}
+            );
+            })}
           </Grid>
         </Box>
       )}

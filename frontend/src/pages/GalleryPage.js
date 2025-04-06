@@ -34,7 +34,15 @@ const GalleryPage = () => {
     try {
       setLoading(true);
       const result = await getImages();
-      setImages(result.images || []);
+      
+      // Process the images to ensure URLs are properly formatted
+      const processedImages = (result.images || []).map(img => ({
+        ...img,
+        url: img.url // Use relative URL path
+      }));
+      
+      console.log('Gallery images loaded:', processedImages.length);
+      setImages(processedImages);
     } catch (err) {
       setError('Failed to load images');
       console.error(err);
@@ -43,13 +51,36 @@ const GalleryPage = () => {
     }
   };
 
-  const handleDownload = (url, index) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `grok-image-${index}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (url, index) => {
+    try {
+      // Make sure we have the full URL for downloading
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      console.log('Downloading image from URL:', fullUrl);
+      
+      // Fetch the image as a blob
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `grok-image-${index}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      console.log('Download completed successfully');
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      setError(`Failed to download image: ${error.message}`);
+    }
   };
 
   const handleOpenModal = (image) => {
@@ -67,19 +98,29 @@ const GalleryPage = () => {
 
   return (
     <Container maxWidth="lg">
-      <Typography 
-        variant="h3" 
-        component="h1" 
-        gutterBottom
-        sx={{ mb: 4, fontWeight: 600 }}
-      >
-        Image Gallery
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography 
+          variant="h3" 
+          component="h1" 
+          gutterBottom
+          sx={{ fontWeight: 600, mb: 0 }}
+        >
+          Image Gallery
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={fetchImages}
+          disabled={loading}
+        >
+          {loading ? 'Refreshing...' : 'Refresh Gallery'}
+        </Button>
+      </Box>
 
       {loading ? (
-        <Grid container spacing={3}>
-          {[...Array(6)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+        <Grid container spacing={2}>
+          {[...Array(8)].map((_, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
               <Card>
                 <Skeleton 
                   variant="rectangular" 
@@ -95,9 +136,22 @@ const GalleryPage = () => {
           ))}
         </Grid>
       ) : images.length > 0 ? (
-        <Grid container spacing={3} className="image-grid">
-          {images.map((image, index) => (
-            <Grid item xs={12} sm={6} md={4} key={image.id || index}>
+        <Grid container spacing={2} className="image-grid">
+          {images.map((image, index) => {
+            // Dynamically set grid size based on number of images
+            let gridSize;
+            if (images.length === 1) {
+              gridSize = { xs: 12, sm: 12, md: 12 }; // Full width for single image
+            } else if (images.length === 2) {
+              gridSize = { xs: 12, sm: 6, md: 6 }; // Two images per row
+            } else if (images.length === 3) {
+              gridSize = { xs: 12, sm: 6, md: 4 }; // Three images per row
+            } else {
+              gridSize = { xs: 12, sm: 6, md: 3 }; // Four images per row (default)
+            }
+            
+            return (
+              <Grid item xs={gridSize.xs} sm={gridSize.sm} md={gridSize.md} key={image.id || index}>
               <Card className="image-card">
                 <CardMedia
                   component="img"
@@ -128,7 +182,8 @@ const GalleryPage = () => {
                 </CardActions>
               </Card>
             </Grid>
-          ))}
+          );
+          })}
         </Grid>
       ) : (
         <Box 
